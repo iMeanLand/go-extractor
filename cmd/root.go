@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 var rootCmd = &cobra.Command{
@@ -24,7 +25,16 @@ var runExtractorCmd = &cobra.Command{
 	Short: "Asana extractor",
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Println("Starting extractor..")
-		extractor.Start(cmd.Context())
+		if len(args) < 1 {
+			log.Fatal("Please indicate the extraction process interval")
+		}
+
+		interval, err := time.ParseDuration(args[0])
+		if err != nil {
+			log.Fatalf("invalid time interval format indicated %s", err)
+		}
+
+		extractor.Start(cmd.Context(), interval)
 	},
 }
 
@@ -32,8 +42,8 @@ func Execute() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	rootCmd.SetContext(ctx)
 	rootCmd.AddCommand(runExtractorCmd)
+	rootCmd.SetContext(ctx)
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
