@@ -1,7 +1,6 @@
 package helper
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -15,31 +14,25 @@ func SaveToJsonFile(name string, data interface{}) error {
 	m := now.Month()
 	d := now.Day()
 
-	filePath := fmt.Sprintf("json/%d/%d/%d", y, m, d)
+	filePath := fmt.Sprintf("json/%d/%02d/%02d", y, m, d)
+	fileName := fmt.Sprintf("%s.json", name)
 
-	if err := os.MkdirAll(filepath.Dir(filePath), 0777); err != nil {
+	if err := os.MkdirAll(filePath, 0777); err != nil {
 		return err
 	}
 
-	b, err := json.Marshal(&data)
+	file, err := os.Create(filepath.Join(filePath, fileName))
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create file: %w", err)
 	}
-	buffer := bytes.NewBuffer(b)
-	encoder := json.NewEncoder(buffer)
-	encoder.SetIndent("", " ")
-
-	file, err := os.Create(filePath + "/" + name + ".json")
 	defer file.Close()
 
-	if err != nil {
-		return err
-	}
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "  ")
 
-	//err = file.Write(buffer)
-	//if err != nil {
-	//	return err
-	//}
+	if err := encoder.Encode(data); err != nil {
+		return fmt.Errorf("failed to write JSON: %w", err)
+	}
 
 	return nil
 }
