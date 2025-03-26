@@ -163,17 +163,16 @@ func fetch(ctx context.Context, request *Request) (*json.RawMessage, error) {
 func fetchUrl(ctx context.Context, request *Request) (*Response, error) {
 	client := &http.Client{}
 
-	params := url.Values{}
 	if request.page != "" {
-		params.Add("page", request.page)
-		params.Add("offset", request.offset)
-		params.Add("limit", strconv.Itoa(limit))
+		request.params.Add("page", request.page)
+		request.params.Add("offset", request.offset)
+		request.params.Add("limit", strconv.Itoa(limit))
 	}
 
 	baseUrl, _ := url.Parse(config.ApiUrl)
 	baseUrl.Path = path.Join(baseUrl.Path, request.endpoint)
 
-	baseUrl.RawQuery = params.Encode()
+	baseUrl.RawQuery = request.params.Encode()
 
 	req, _ := http.NewRequest(request.method, baseUrl.String(), nil)
 	req.WithContext(ctx)
