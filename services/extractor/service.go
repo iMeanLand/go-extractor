@@ -135,8 +135,6 @@ func fetch(ctx context.Context, request *Request) (*json.RawMessage, error) {
 				break
 			}
 
-			log.Printf("log, d %v", response.Data)
-
 			var data []interface{}
 			err = json.Unmarshal(response.Data, &data)
 
