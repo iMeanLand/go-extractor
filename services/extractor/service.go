@@ -117,7 +117,7 @@ func extract(ctx context.Context) {
 func fetch(ctx context.Context, request *Request) (*json.RawMessage, error) {
 	var err error
 
-	var allData json.RawMessage
+	var allData []interface{}
 	for i := 0; i < retries; i++ {
 
 		for {
@@ -137,7 +137,15 @@ func fetch(ctx context.Context, request *Request) (*json.RawMessage, error) {
 
 			log.Printf("log, d %v", response.Data)
 
-			allData = append(allData, response.Data...)
+			var data []interface{}
+			err = json.Unmarshal(response.Data, &data)
+
+			if err != nil {
+				log.Printf("[ERROR] decoding data %v", err)
+				break
+			}
+
+			allData = append(allData, data...)
 
 			if response.Data == nil || response.NextPage.Path == "" {
 				break
@@ -155,9 +163,18 @@ func fetch(ctx context.Context, request *Request) (*json.RawMessage, error) {
 		time.Sleep(1 * time.Second) // retry interval
 	}
 
+	jsonData, err := json.Marshal(allData)
+
+	if err != nil {
+		log.Printf("[ERROR] encoding data %v", err)
+		return nil, err
+	}
+
 	log.Println("Successfully fetched")
 
-	return &allData, err
+	rawMsg := json.RawMessage(jsonData)
+
+	return &rawMsg, err
 }
 
 func fetchUrl(ctx context.Context, request *Request) (*Response, error) {
